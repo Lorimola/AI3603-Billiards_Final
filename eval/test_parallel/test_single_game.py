@@ -6,11 +6,11 @@ import os
 import sys
 
 # 添加路径
-project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.insert(0, os.path.join(project_root, 'time_limit_mcts'))
+project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, project_root)
 
 from poolenv import PoolEnv
-from agent import BasicAgent, NewAgent
+from agents import BasicAgent, NewAgent
 
 def main():
     print("=" * 60)

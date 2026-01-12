@@ -21,8 +21,11 @@ import os
 from datetime import datetime
 import random
 
-from poolenv import PoolEnv
-from agent import Agent, BasicAgent, NewAgent
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from train.poolenv import PoolEnv
+from train.agent import Agent, BasicAgent, NewAgent
 
 env = PoolEnv()
 results = {'AGENT_A_WIN': 0, 'AGENT_B_WIN': 0, 'SAME': 0}

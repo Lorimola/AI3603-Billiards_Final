@@ -22,7 +22,10 @@ import os
 from datetime import datetime
 import random
 
-from agent import Agent, BasicAgent, NewAgent
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from train.agent import Agent, BasicAgent, NewAgent
 
 
 def collect_ball_states(shot):
