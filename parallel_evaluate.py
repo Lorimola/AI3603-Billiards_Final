@@ -7,9 +7,7 @@ parallel_evaluate.py - 并行 Agent 评估脚本
 - 支持灵活配置对战双方
 
 使用方式：
-    python test_parallel/parallel_evaluate.py --num_games 1000 --num_workers 80 --agent_a new --agent_b basic
-    python test_parallel/parallel_evaluate.py --num_games 1000 --num_workers 80 --agent_a new --agent_b pro
-    python test_parallel/parallel_evaluate.py --num_games 1000 --num_workers 80 --agent_a long --agent_b basic
+    python parallel_evaluate.py --num_games 120 --num_workers 16 --cpu_cores 32 --agent_a basic --agent_b new
 """
 
 import os
