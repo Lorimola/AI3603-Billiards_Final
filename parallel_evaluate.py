@@ -7,8 +7,9 @@ parallel_evaluate.py - 并行 Agent 评估脚本
 - 支持灵活配置对战双方
 
 使用方式：
-    python parallel_evaluate.py --num_games 1000 --num_workers 80 --agent_a merge_basic --agent_b basic
-    python parallel_evaluate.py --num_games 1000 --num_workers 80 --agent_a merge_basic --agent_b pro
+    python test_parallel/parallel_evaluate.py --num_games 1000 --num_workers 80 --agent_a new --agent_b basic
+    python test_parallel/parallel_evaluate.py --num_games 1000 --num_workers 80 --agent_a new --agent_b pro
+    python test_parallel/parallel_evaluate.py --num_games 1000 --num_workers 80 --agent_a long --agent_b basic
 """
 
 import os
@@ -72,44 +73,49 @@ def create_agent(agent_type, mcts_simulations=None, mcts_candidates=None):
     
     Args:
         agent_type: agent 类型
-        mcts_simulations: MCTS 模拟次数 (用于 future/merge_basic/long)
-        mcts_candidates: MCTS 候选数量 (用于 future/merge_basic/long)
+        mcts_simulations: MCTS 模拟次数 (用于 long/long_opening)
+        mcts_candidates: MCTS 候选数量 (用于 long/long_opening)
     """
     # 获取项目根目录
-    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    project_root = os.path.dirname(os.path.abspath(__file__))
     
-    if agent_type == 'merge_basic':
-        # 正确的 NewAgent 在 time_limit_mcts/agent.py 中
-        agent_path = os.path.join(project_root, 'time_limit_mcts', 'agent.py')
-        agent_module = load_module_from_path('agent_time_limit', agent_path)
-        return agent_module.NewAgent()
-    elif agent_type == 'future':
-        # Future 分支的 NewAgent (最新最强版本)
-        agent_path = os.path.join(project_root, 'future_agent', 'agent.py')
-        agent_module = load_module_from_path('agent_future', agent_path)
-        return agent_module.NewAgent()
+    if agent_type == 'new':
+        # 使用 agents/ 目录下的 NewAgent（主版本）
+        sys.path.insert(0, project_root)
+        from agents import NewAgent
+        return NewAgent()
     elif agent_type == 'long':
-        # Long MCTS: 独立的 long_mcts 模型 (默认 64 候选, 400 模拟)
-        agent_path = os.path.join(project_root, 'long_mcts', 'agent.py')
+        # Long MCTS: eval/long_mcts/agent.py
+        agent_path = os.path.join(project_root, 'eval', 'long_mcts', 'agent.py')
         agent_module = load_module_from_path('agent_long', agent_path)
         return agent_module.NewAgent()
+    elif agent_type == 'long_opening':
+        # Long MCTS with opening: eval/long_mcts_opening/agent.py
+        agent_path = os.path.join(project_root, 'eval', 'long_mcts_opening', 'agent.py')
+        agent_module = load_module_from_path('agent_long_opening', agent_path)
+        return agent_module.NewAgent()
     elif agent_type == 'physics':
-        # Physics-based Agent (物理模拟 agent)
-        agent_path = os.path.join(project_root, 'physics_agent', 'agent.py')
+        # Physics-based Agent: eval/physics/agent.py
+        agent_path = os.path.join(project_root, 'eval', 'physics', 'agent.py')
         agent_module = load_module_from_path('agent_physics', agent_path)
         return agent_module.NewAgent()
+    elif agent_type == 'time_limited':
+        # Time limited MCTS: eval/time_limited_mcts/agent.py
+        agent_path = os.path.join(project_root, 'eval', 'time_limited_mcts', 'agent.py')
+        agent_module = load_module_from_path('agent_time_limited', agent_path)
+        return agent_module.NewAgent()
     elif agent_type == 'basic':
-        # BasicAgent 在 time_limit_mcts/agent.py 中
-        agent_path = os.path.join(project_root, 'time_limit_mcts', 'agent.py')
-        agent_module = load_module_from_path('agent_basic', agent_path)
-        return agent_module.BasicAgent()
+        # BasicAgent: 使用 agents/ 目录下的 BasicAgent
+        sys.path.insert(0, project_root)
+        from agents import BasicAgent
+        return BasicAgent()
     elif agent_type == 'pro':
-        # BasicAgentPro 在 test_parallel/basic_agent_pro.py 中
-        sys.path.insert(0, os.path.join(project_root, 'test_parallel'))
-        from basic_agent_pro import BasicAgentPro
-        return BasicAgentPro(n_simulations=50)
+        # BasicAgentPro: agents/basic_agent_pro.py
+        sys.path.insert(0, project_root)
+        from agents import BasicAgentPro
+        return BasicAgentPro(n_simulations=50)  # 保持与原配置一致
     else:
-        raise ValueError(f"Unknown agent type: {agent_type}")
+        raise ValueError(f"Unknown agent type: {agent_type}. Available: new, basic, pro, long, long_opening, physics, time_limited")
 
 
 def play_single_game(args):
@@ -126,8 +132,8 @@ def play_single_game(args):
     try:
         with SuppressOutput():
             # 获取项目根目录并添加到路径
-            project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-            sys.path.insert(0, os.path.join(project_root, 'time_limit_mcts'))
+            project_root = os.path.dirname(os.path.abspath(__file__))
+            sys.path.insert(0, project_root)
             
             # 导入必要模块
             from poolenv import PoolEnv
@@ -188,10 +194,10 @@ def main():
     parser.add_argument('--num_games', type=int, default=1000, help='对战局数')
     parser.add_argument('--num_workers', type=int, default=80, help='并行进程数')
     parser.add_argument('--cpu_cores', type=int, default=100, help='可用 CPU 核心数')
-    parser.add_argument('--agent_a', type=str, default='merge_basic', 
-                        choices=['merge_basic', 'future', 'long', 'basic', 'pro', 'physics'], help='Agent A 类型')
+    parser.add_argument('--agent_a', type=str, default='new', 
+                        choices=['new', 'basic', 'pro', 'long', 'long_opening', 'physics', 'time_limited'], help='Agent A 类型')
     parser.add_argument('--agent_b', type=str, default='basic',
-                        choices=['merge_basic', 'future', 'long', 'basic', 'pro', 'physics'], help='Agent B 类型')
+                        choices=['new', 'basic', 'pro', 'long', 'long_opening', 'physics', 'time_limited'], help='Agent B 类型')
     parser.add_argument('--timeout', type=int, default=600, help='单局超时时间（秒）')
     parser.add_argument('--mcts_simulations', type=int, default=None, help='MCTS 模拟次数 (long agent)')
     parser.add_argument('--mcts_candidates', type=int, default=None, help='MCTS 候选数量 (long agent)')

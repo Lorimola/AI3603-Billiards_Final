@@ -484,8 +484,8 @@ class NewAgent(Agent):
 
     def __init__(
         self,
-        num_candidates: int = 32,
-        num_simulations: int = 200,
+        num_candidates: int = 64,
+        num_simulations: int = 400,
         max_depth: int = 2,           # 保留参数，占位
         exploration_c: float = 1.4,     
         rollout_per_leaf: int = 2,    # 保留参数，占位

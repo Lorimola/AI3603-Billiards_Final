@@ -122,10 +122,11 @@ class MCTSSolver:
 
         self.risk_aversion = max(0.0, float(risk_aversion))
 
-        # 并行 worker 数：默认最多 8 个（可以在 NewAgent 里显式传 num_workers）
+        # 并行 worker 数：如果未指定，自动使用所有可用核心（最多 16 个）
         if num_workers is None or num_workers <= 0:
             cpu_cnt = os.cpu_count() or 1
-            self.num_workers = max(1, min(cpu_cnt, 8))
+            # 移除 8 的限制，允许使用更多核心（但限制最多 16 个以避免过度竞争）
+            self.num_workers = max(1, min(cpu_cnt, 16))
         else:
             self.num_workers = int(num_workers)
 

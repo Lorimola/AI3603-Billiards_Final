@@ -13,6 +13,7 @@ evaluate.py - Agent 评估脚本
 """
 
 # 导入必要的模块
+import os
 from utils import set_random_seed
 from poolenv import PoolEnv
 from agents import BasicAgent, BasicAgentPro, NewAgent
@@ -21,13 +22,29 @@ from agents import BasicAgent, BasicAgentPro, NewAgent
 # 根据需求，我们在这里统一设置随机种子，确保 agent 双方的全局击球扰动使用相同的随机状态
 set_random_seed(enable=False, seed=42)
 
+# 配置并行参数：使用更多 CPU 核心加速 MCTS 搜索
+# 可以根据需要调整这些参数
+CPU_CORES = os.cpu_count() or 8  # 获取可用 CPU 核心数
+NUM_WORKERS = min(CPU_CORES, 16)  # 限制最多 16 个 worker（可根据需要调整）
+NUM_SIMULATIONS = 200  # MCTS 仿真次数（可根据需要调整）
+NUM_CANDIDATES = 32    # 候选动作数量（可根据需要调整）
+
+print(f"使用 {NUM_WORKERS} 个并行 worker（共 {CPU_CORES} 个 CPU 核心）")
+print(f"MCTS 配置: {NUM_SIMULATIONS} 次仿真, {NUM_CANDIDATES} 个候选动作")
+
 env = PoolEnv()
 results = {'AGENT_A_WIN': 0, 'AGENT_B_WIN': 0, 'SAME': 0}
 n_games = 120  # 对战局数 自己测试时可以修改 扩充为120局为了减少随机带来的扰动
 
 ## 选择对打的对手
-agent_a, agent_b = BasicAgent(), NewAgent() # 与 BasicAgent 对打
-# agent_a, agent_b = BasicAgentPro(), NewAgent() # 与 BasicAgentPro 对打
+# 创建 NewAgent 时传入并行参数
+agent_a = BasicAgent()
+agent_b = NewAgent(
+    num_candidates=NUM_CANDIDATES,
+    num_simulations=NUM_SIMULATIONS,
+    num_workers=NUM_WORKERS
+)
+# agent_a, agent_b = BasicAgentPro(), NewAgent(num_workers=NUM_WORKERS) # 与 BasicAgentPro 对打
 
 players = [agent_a, agent_b]  # 用于切换先后手
 target_ball_choice = ['solid', 'solid', 'stripe', 'stripe']  # 轮换球型

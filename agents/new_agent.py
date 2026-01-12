@@ -124,13 +124,13 @@ class NewAgent(Agent):
 
     def __init__(
         self,
-        num_candidates: int = 80,
-        num_simulations: int = 800,
+        num_candidates: int = 32,
+        num_simulations: int = 200,
         max_depth: int = 2,           # 保留参数，占位
         exploration_c: float = 1.4,     
         rollout_per_leaf: int = 2,    # 保留参数，占位
         risk_aversion: float = 0.4,   # 均值-λ*方差 中的 λ
-        num_workers=8,                # CPU 并行线程数，None 表示自动
+        num_workers=None,             # CPU 并行线程数，None 表示自动（最多16个）
     ):
         super().__init__()
         self.num_candidates = num_candidates
